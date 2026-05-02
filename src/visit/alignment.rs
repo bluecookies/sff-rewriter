@@ -1,9 +1,18 @@
 use super::{Edit, Visit, Visitor};
 use crate::kinds;
 
-#[derive(Default)]
 pub struct AlignmentVisitor {
+    line_length_threshold: usize,
     edits: Vec<Edit>,
+}
+
+impl Default for AlignmentVisitor {
+    fn default() -> Self {
+        Self {
+            line_length_threshold: 88, // PEP 8 recommends 79, but 88 is the default in Black and allows for some flexibility
+            edits: Vec::new(),
+        }
+    }
 }
 
 impl Visitor for AlignmentVisitor {
@@ -18,6 +27,11 @@ impl Visitor for AlignmentVisitor {
         // Skip empty argument lists
         let Some(child) = node.named_child(0) else { return Visit::Skip };
 
+        // Skip if line length is less than threshold
+        if node.end_position().column <= self.line_length_threshold {
+            return Visit::Skip;
+        }
+
         // Get the indentation of the first element and align the rest to that
         let indent_width = child.start_position().column;
         let indent = smol_str::SmolStr::from(format!("\n{}", " ".repeat(indent_width)));
@@ -31,7 +45,8 @@ impl Visitor for AlignmentVisitor {
             });
         }
 
-        Visit::Skip
+        // Continue in case we need to format a nested dict
+        Visit::Continue
     }
 
     fn edits(self) -> Vec<Edit> {

@@ -15,6 +15,7 @@ fn main() -> anyhow::Result<()> {
     output = visit::run_pass(&output, &mut tree, &mut parser, visit::QuotesVisitor::default());
     // Format parens, brackets, braces and commas before parameter alignment, since the latter depends on the former
     output = visit::run_pass(&output, &mut tree, &mut parser, visit::SpacingVisitor::default());
+    // Spacing visitor collapses multi-line lists into one line, so alignment visitor can have a canonical form based on line length
     output = visit::run_pass(&output, &mut tree, &mut parser, visit::AlignmentVisitor::default());
 
     // Remove trailing whitespace (including blank lines)
