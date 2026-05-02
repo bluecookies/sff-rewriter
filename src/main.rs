@@ -12,7 +12,7 @@ fn main() -> anyhow::Result<()> {
     let root_node = tree.root_node();
 
     let mut output = source;
-    output = visit::run_pass(&output, root_node, visit::DebugVisitor);
+    output = visit::run_pass(&output, root_node, visit::DebugVisitor::default());
     output = visit::run_pass(&output, root_node, visit::QuotesVisitor::default());
     // Format parens, brackets, braces and commas before parameter alignment, since the latter depends on the former
     output = visit::run_pass(&output, root_node, visit::SpacingVisitor::default());

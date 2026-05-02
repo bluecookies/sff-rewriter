@@ -1,9 +1,20 @@
 use super::{Edit, Visit, Visitor};
 
-pub struct DebugVisitor;
+#[derive(Default)]
+pub struct DebugVisitor {
+    stack: Vec<usize>,
+}
 
 impl Visitor for DebugVisitor {
     fn visit(&mut self, node: tree_sitter::Node, source: &[u8]) -> Visit {
+        // Pop stack until we find the current node's parent
+        while !self.stack.is_empty() && node.parent().map(|p| p.id()) != self.stack.last().copied() {
+            self.stack.pop();
+        }
+        let depth = self.stack.len();
+        self.stack.push(node.id());
+
+        let indent = " ".repeat(depth);
         let kind_fmt = if node.is_named() {
             if node.child_count() == 0 {
                 format!("\x1b[1;32m<{}>\x1b[0m", node.kind()) // bold green for named leaves
@@ -20,7 +31,7 @@ impl Visitor for DebugVisitor {
         let source_spanned = node
             .utf8_text(source)
             .unwrap_or("\x1b[3m<invalid utf-8 or out of range>\x1b[0m");
-        log::debug!("{}: {}", kind_fmt, source_spanned,);
+        log::debug!("{}{}: {}", indent, kind_fmt, source_spanned,);
         Visit::Continue
     }
 

@@ -1,11 +1,11 @@
-mod spacing;
 mod debug;
 mod quotes;
+mod spacing;
 
-pub use spacing::SpacingVisitor;
 #[allow(unused)]
 pub use debug::DebugVisitor;
 pub use quotes::QuotesVisitor;
+pub use spacing::SpacingVisitor;
 
 pub trait Visitor {
     fn visit(&mut self, node: tree_sitter::Node, source: &[u8]) -> Visit;
