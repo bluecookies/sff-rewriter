@@ -1,8 +1,9 @@
+mod alignment;
 mod debug;
 mod quotes;
 mod spacing;
 
-#[allow(unused)]
+pub use alignment::AlignmentVisitor;
 pub use debug::DebugVisitor;
 pub use quotes::QuotesVisitor;
 pub use spacing::SpacingVisitor;
@@ -18,11 +19,20 @@ pub enum Visit {
     Skip,
 }
 
-pub fn run_pass<V: Visitor>(source: &str, root: tree_sitter::Node, mut visitor: V) -> String {
+pub fn run_pass<V: Visitor>(
+    source: &str,
+    tree: &mut tree_sitter::Tree,
+    parser: &mut tree_sitter::Parser,
+    mut visitor: V,
+) -> String {
     log::info!("Applying pass: {}", std::any::type_name::<V>());
-    walk(root, &mut visitor, source.as_bytes());
+    walk(tree.root_node(), &mut visitor, source.as_bytes());
     let edits = visitor.edits();
-    apply_edits(source, edits)
+    let new_source = apply_edits(source, edits);
+    // Parse modified tree from scratch
+    let new_tree = parser.parse(&new_source, None).expect("parser language not set");
+    *tree = new_tree;
+    new_source
 }
 
 fn walk<T: Visitor>(root: tree_sitter::Node, visitor: &mut T, source: &[u8]) {
