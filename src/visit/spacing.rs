@@ -1,11 +1,11 @@
 use super::{Edit, Visit, Visitor};
 
 #[derive(Default)]
-pub struct BracketsVisitor {
+pub struct SpacingVisitor {
     edits: Vec<Edit>,
 }
 
-impl Visitor for BracketsVisitor {
+impl Visitor for SpacingVisitor {
     fn visit(&mut self, node: tree_sitter::Node, _source: &[u8]) -> Visit {
         if let Some(parent) = node.parent() {
             // Skip the opening and closing braces of an f-string interpolation,
@@ -37,11 +37,19 @@ impl Visitor for BracketsVisitor {
             ")" | "]" | "}" => {
                 let Some(prev) = node.prev_sibling() else { return Visit::Continue };
                 // Skip (), [], {} - works because brackets cannot mismatch
-                if matches!(prev.kind(), "(" | "[" | "{") {
+                // Also skip commas before closing brackets, since that is handled already
+                if matches!(prev.kind(), "(" | "[" | "{" | ",") {
                     return Visit::Continue;
                 };
                 self.edits.push(Edit {
                     range: prev.end_byte()..node.start_byte(),
+                    new_text: " ".into(),
+                });
+            }
+            "," => {
+                let Some(next) = node.next_sibling() else { return Visit::Continue };
+                self.edits.push(Edit {
+                    range: node.end_byte()..next.start_byte(),
                     new_text: " ".into(),
                 });
             }

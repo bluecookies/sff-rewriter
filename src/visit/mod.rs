@@ -1,8 +1,8 @@
-mod brackets;
+mod spacing;
 mod debug;
 mod quotes;
 
-pub use brackets::BracketsVisitor;
+pub use spacing::SpacingVisitor;
 #[allow(unused)]
 pub use debug::DebugVisitor;
 pub use quotes::QuotesVisitor;
