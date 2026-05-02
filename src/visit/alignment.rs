@@ -79,11 +79,11 @@ impl Visitor for AlignmentVisitor {
             None => first_child_col,
         };
 
-        // Skip if the effective line length is within threshold. The effective length is
-        // the aligned indent plus the span from the first child to the closing delimiter,
+        // Skip if the effective line length is within threshold and this is a single line.
+        // The effective length is the aligned indent plus the span from the first child to the closing delimiter,
         // i.e. where the last character would land after ancestor reformatting.
         let effective_length = indent_width + (node.end_position().column.saturating_sub(first_child_col));
-        if effective_length <= self.line_length_threshold {
+        if effective_length <= self.line_length_threshold && node.start_position().row == node.end_position().row {
             return Visit::Skip;
         }
 
