@@ -1,9 +1,9 @@
-use super::{Edit, Visitor};
+use super::{Edit, Visit, Visitor};
 
 pub struct DebugVisitor;
 
 impl Visitor for DebugVisitor {
-    fn visit(&mut self, node: tree_sitter::Node, source: &[u8]) {
+    fn visit(&mut self, node: tree_sitter::Node, source: &[u8]) -> Visit {
         let kind_fmt = if node.is_named() {
             if node.child_count() == 0 {
                 format!("\x1b[1;32m<{}>\x1b[0m", node.kind()) // bold green for named leaves
@@ -21,6 +21,7 @@ impl Visitor for DebugVisitor {
             .utf8_text(source)
             .unwrap_or("\x1b[3m<invalid utf-8 or out of range>\x1b[0m");
         log::debug!("{}: {}", kind_fmt, source_spanned,);
+        Visit::Continue
     }
 
     fn edits(self) -> Vec<Edit> {

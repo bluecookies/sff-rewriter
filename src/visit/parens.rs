@@ -1,4 +1,4 @@
-use super::{Edit, Visitor};
+use super::{Edit, Visit, Visitor};
 
 #[derive(Default)]
 pub struct ParensVisitor {
@@ -6,13 +6,13 @@ pub struct ParensVisitor {
 }
 
 impl Visitor for ParensVisitor {
-    fn visit(&mut self, node: tree_sitter::Node, _source: &[u8]) {
+    fn visit(&mut self, node: tree_sitter::Node, _source: &[u8]) -> Visit {
         match node.kind() {
             "(" => {
-                let Some(next) = node.next_sibling() else { return };
+                let Some(next) = node.next_sibling() else { return Visit::Continue };
                 // Skip parentheses like ()
                 if next.kind() == ")" {
-                    return;
+                    return Visit::Continue;
                 };
                 self.edits.push(Edit {
                     range: node.end_byte()..next.start_byte(),
@@ -20,10 +20,10 @@ impl Visitor for ParensVisitor {
                 });
             }
             ")" => {
-                let Some(prev) = node.prev_sibling() else { return };
+                let Some(prev) = node.prev_sibling() else { return Visit::Continue };
                 // Skip parentheses like ()
                 if prev.kind() == "(" {
-                    return;
+                    return Visit::Continue;
                 };
                 self.edits.push(Edit {
                     range: prev.end_byte()..node.start_byte(),
@@ -32,6 +32,7 @@ impl Visitor for ParensVisitor {
             }
             _ => {}
         }
+        Visit::Continue
     }
 
     fn edits(self) -> Vec<Edit> {

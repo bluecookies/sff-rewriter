@@ -1,14 +1,21 @@
 mod debug;
 mod parens;
+mod quotes;
 
 #[allow(unused)]
 pub use debug::DebugVisitor;
 pub use parens::ParensVisitor;
+pub use quotes::QuotesVisitor;
 
 pub trait Visitor {
-    fn visit(&mut self, node: tree_sitter::Node, source: &[u8]);
+    fn visit(&mut self, node: tree_sitter::Node, source: &[u8]) -> Visit;
 
     fn edits(self) -> Vec<Edit>;
+}
+
+pub enum Visit {
+    Continue,
+    Skip,
 }
 
 pub fn run_pass<V: Visitor>(source: &str, root: tree_sitter::Node, mut visitor: V) -> String {
@@ -21,13 +28,21 @@ pub fn run_pass<V: Visitor>(source: &str, root: tree_sitter::Node, mut visitor: 
 fn walk<T: Visitor>(root: tree_sitter::Node, visitor: &mut T, source: &[u8]) {
     let mut cursor = root.walk();
     loop {
-        visitor.visit(cursor.node(), source);
-        if cursor.goto_first_child() {
-            continue;
+        // Visit the current node
+        let flow = visitor.visit(cursor.node(), source);
+
+        // Skip the children if needed
+        if matches!(flow, Visit::Continue) {
+            if cursor.goto_first_child() {
+                continue;
+            }
         }
+
         if cursor.goto_next_sibling() {
             continue;
         }
+
+        // Go back up the tree until we can go to the next sibling
         loop {
             if !cursor.goto_parent() {
                 return;
