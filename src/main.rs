@@ -13,8 +13,8 @@ fn main() -> anyhow::Result<()> {
     let mut output = source;
     output = visit::run_pass(&output, root_node, visit::DebugVisitor);
     output = visit::run_pass(&output, root_node, visit::QuotesVisitor::default());
-    // Format parentheses before parameter alignment, since the latter depends on the former
-    output = visit::run_pass(&output, root_node, visit::ParensVisitor::default());
+    // Format parens, brackets and braces before parameter alignment, since the latter depends on the former
+    output = visit::run_pass(&output, root_node, visit::BracketsVisitor::default());
 
     std::fs::write("data/test_formatted.py", output)?;
 
