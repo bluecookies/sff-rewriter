@@ -10,7 +10,7 @@ impl Visitor for SpacingVisitor {
         if let Some(parent) = node.parent() {
             // Skip the opening and closing braces of an f-string interpolation,
             // since the spacing there is significant (sometimes, AFAIK its when you use =)
-            if parent.kind() == "interpolation" {
+            if parent.kind() == crate::kinds::INTERPOLATION {
                 let is_first = parent.child(0).map(|n| n.id() == node.id()).unwrap_or(false);
                 let is_last = parent
                     .child(parent.child_count() as u32 - 1)

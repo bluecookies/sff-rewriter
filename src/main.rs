@@ -1,3 +1,4 @@
+mod kinds;
 mod visit;
 
 fn main() -> anyhow::Result<()> {

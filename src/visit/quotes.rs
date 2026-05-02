@@ -11,7 +11,7 @@ const TRIPLE_QUOTE: &str = "\"\"\"";
 impl Visitor for QuotesVisitor {
     fn visit(&mut self, node: tree_sitter::Node, source: &[u8]) -> Visit {
         // Only convert strings
-        if node.kind() != "string" {
+        if node.kind() != crate::kinds::STRING {
             return Visit::Continue;
         };
 
