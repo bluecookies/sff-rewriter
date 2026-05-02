@@ -1,4 +1,5 @@
 use super::{Edit, Visit, Visitor};
+use crate::kinds;
 
 #[derive(Default)]
 pub struct AlignmentVisitor {
@@ -7,7 +8,10 @@ pub struct AlignmentVisitor {
 
 impl Visitor for AlignmentVisitor {
     fn visit(&mut self, node: tree_sitter::Node, _source: &[u8]) -> Visit {
-        if node.kind() != crate::kinds::ARGUMENT_LIST {
+        if !matches!(
+            node.kind(),
+            kinds::ARGUMENT_LIST | kinds::PARAMETERS | kinds::DICTIONARY | kinds::LIST | kinds::SET | kinds::TUPLE
+        ) {
             return Visit::Continue;
         }
 
