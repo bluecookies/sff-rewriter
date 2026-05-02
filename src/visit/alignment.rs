@@ -4,40 +4,92 @@ use crate::kinds;
 pub struct AlignmentVisitor {
     line_length_threshold: usize,
     edits: Vec<Edit>,
+    stack: Vec<NodeInfo>,
 }
 
 impl Default for AlignmentVisitor {
     fn default() -> Self {
         Self {
-            line_length_threshold: 88, // PEP 8 recommends 79, but 88 is the default in Black and allows for some flexibility
+            line_length_threshold: 88,
             edits: Vec::new(),
+            stack: Vec::new(),
         }
     }
 }
 
+struct NodeInfo {
+    node_id: usize,
+    list_state: Option<ListState>,
+}
+
+struct ListState {
+    indent_width: usize,
+    /// Original column of whichever direct named child of this list we are currently
+    /// descending into. Updated as siblings are visited left-to-right, so that any
+    /// nested list encountered deeper in the subtree can anchor itself relative to it.
+    owning_orig_col: usize,
+}
+
 impl Visitor for AlignmentVisitor {
     fn visit(&mut self, node: tree_sitter::Node, _source: &[u8]) -> Visit {
+        // Pop stack until the top is the direct parent of this node
+        while !self.stack.is_empty() && node.parent().map(|p| p.id()) != self.stack.last().map(|n| n.node_id) {
+            self.stack.pop();
+        }
+
+        // When entering a named node, check if it is a direct child of the nearest list
+        // ancestor. If so, update that list's owning_orig_col to this node's original
+        // column. This keeps track of which sibling subtree we're inside, so that nested
+        // lists can compute their indentation relative to the correct anchor.
+        if node.is_named() {
+            let parent_id = node.parent().map(|p| p.id());
+            for frame in self.stack.iter_mut().rev() {
+                if let Some(ref mut ls) = frame.list_state {
+                    // Only update if this node is a *direct* child of this list frame,
+                    // not a deeper descendant — otherwise intermediate nodes (e.g. the
+                    // argument_list inside a call) would overwrite with the wrong column.
+                    if parent_id == Some(frame.node_id) {
+                        ls.owning_orig_col = node.start_position().column;
+                    }
+                    break; // Only the nearest list ancestor is relevant
+                }
+            }
+        }
+
         if !matches!(
             node.kind(),
             kinds::ARGUMENT_LIST | kinds::PARAMETERS | kinds::DICTIONARY | kinds::LIST | kinds::SET | kinds::TUPLE
         ) {
+            self.stack.push(NodeInfo {
+                node_id: node.id(),
+                list_state: None,
+            });
             return Visit::Continue;
         }
 
-        // Skip empty argument lists
-        let Some(child) = node.named_child(0) else { return Visit::Skip };
+        // Skip empty lists
+        let Some(first_child) = node.named_child(0) else {
+            return Visit::Skip;
+        };
 
-        // Skip if line length is less than threshold
-        if node.end_position().column <= self.line_length_threshold {
+        // Compute indentation for children of this list. ...
+        let first_child_col = first_child.start_position().column;
+        let indent_width = match self.stack.iter().rev().find_map(|n| n.list_state.as_ref()) {
+            Some(ls) => ls.indent_width + (first_child_col - ls.owning_orig_col),
+            None => first_child_col,
+        };
+
+        // Skip if the effective line length is within threshold. The effective length is
+        // the aligned indent plus the span from the first child to the closing delimiter,
+        // i.e. where the last character would land after ancestor reformatting.
+        let effective_length = indent_width + (node.end_position().column - first_child_col);
+        if effective_length <= self.line_length_threshold {
             return Visit::Skip;
         }
 
-        // Get the indentation of the first element and align the rest to that
-        let indent_width = child.start_position().column;
         let indent = smol_str::SmolStr::from(format!("\n{}", " ".repeat(indent_width)));
 
         let mut cursor = node.walk();
-        // Skip the first child since that is the reference for alignment
         for child in node.named_children(&mut cursor).skip(1) {
             self.edits.push(Edit {
                 range: child.start_byte()..child.start_byte(),
@@ -45,7 +97,15 @@ impl Visitor for AlignmentVisitor {
             });
         }
 
-        // Continue in case we need to format a nested dict
+        self.stack.push(NodeInfo {
+            node_id: node.id(),
+            list_state: Some(ListState {
+                indent_width,
+                // Initialise to the first child — updated as siblings are visited
+                owning_orig_col: first_child_col,
+            }),
+        });
+
         Visit::Continue
     }
 
