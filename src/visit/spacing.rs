@@ -1,4 +1,5 @@
 use super::{Edit, Visit, Visitor};
+use crate::kinds;
 
 #[derive(Default)]
 pub struct SpacingVisitor {
@@ -38,7 +39,7 @@ impl Visitor for SpacingVisitor {
                 let Some(prev) = node.prev_sibling() else { return Visit::Continue };
                 // Skip (), [], {} - works because brackets cannot mismatch
                 // Also skip commas before closing brackets, since that is handled already
-                if matches!(prev.kind(), "(" | "[" | "{" | ",") {
+                if matches!(prev.kind(), "(" | "[" | "{" | "," | ":") {
                     return Visit::Continue;
                 };
                 self.edits.push(Edit {
@@ -46,7 +47,17 @@ impl Visitor for SpacingVisitor {
                     new_text: " ".into(),
                 });
             }
-            "," => {
+            // Add space after commas, and colons in dicts and fn defs
+            k @ ("," | ":") => {
+                if k == ":" {
+                    let Some(parent_kind) = node.parent().map(|n| n.kind()) else {
+                        return Visit::Continue;
+                    };
+                    if !(parent_kind == kinds::PAIR || parent_kind == kinds::TYPED_PARAMETER) {
+                        return Visit::Continue;
+                    }
+                }
+
                 let Some(next) = node.next_sibling() else { return Visit::Continue };
                 self.edits.push(Edit {
                     range: node.end_byte()..next.start_byte(),
