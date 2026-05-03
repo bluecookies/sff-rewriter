@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ensureBinary } from "./downloader";
+import { ensureBinary, redownloadBinary } from "./downloader";
 import { SffFormattingProvider } from "./formatter";
 
 export const activate = async (context: vscode.ExtensionContext) => {
@@ -13,6 +13,10 @@ export const activate = async (context: vscode.ExtensionContext) => {
     vscode.languages.registerDocumentRangeFormattingEditProvider(
       "python",
       provider,
+    ),
+    vscode.commands.registerCommand(
+      "sff.redownload",
+      async () => await redownloadBinary(context, outputChannel),
     ),
   );
 };

@@ -3,7 +3,7 @@
   "displayName": "SFF Syntax Rewriter",
   "repository": "github:bluecookies/sff-rewriter",
   "description": "Rewrites Python syntax to match SFF formatting style guidelines",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.118.0"
   },
@@ -41,7 +41,13 @@
           "description": "Log level for the sff binary (RUST_LOG). For debugging purposes. e.g. 'debug', 'info', 'warn', 'error'."
         }
       }
-    }
+    },
+    "commands": [
+      {
+        "command": "sff.redownload",
+        "title": "sff-fmt: Redownload Binary"
+      }
+    ]
   },
   "activationEvents": [
     "onLanguage:python"

@@ -55,6 +55,22 @@ export const ensureBinary = async (
   return binaryPath;
 };
 
+export const redownloadBinary = async (
+  context: vscode.ExtensionContext,
+  output: vscode.OutputChannel,
+) => {
+  const binaryName = platformBinary();
+  const binaryPath = path.join(context.globalStorageUri.fsPath, binaryName);
+  if (fs.existsSync(binaryPath)) {
+    fs.unlinkSync(binaryPath);
+  }
+  vscode.window.showInformationMessage("sff: cleared cache, redownloading...");
+  await ensureBinary(context, output);
+  vscode.window.showInformationMessage(
+    "sff: download complete, reload window to apply",
+  );
+};
+
 const download = async (
   url: string,
   dest: string,
