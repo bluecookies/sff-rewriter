@@ -1,6 +1,7 @@
 {
   "name": "sff-fmt",
   "displayName": "SFF Syntax Rewriter",
+  "repository": "github:bluecookies/sff-rewriter",
   "description": "Rewrites Python syntax to match SFF formatting style guidelines",
   "version": "0.0.1",
   "engines": {
@@ -59,6 +60,7 @@
     "@types/vscode": "^1.118.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.9.1",
     "eslint": "^9.39.3",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3",
