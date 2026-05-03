@@ -1,9 +1,11 @@
 mod alignment;
+mod column;
 mod debug;
 mod quotes;
 mod spacing;
 
 pub use alignment::AlignmentVisitor;
+pub use column::ColumnVisitor;
 pub use debug::DebugVisitor;
 pub use quotes::QuotesVisitor;
 pub use spacing::SpacingVisitor;
@@ -75,9 +77,13 @@ fn apply_edits(source: &str, mut edits: Vec<Edit>) -> String {
     for [a, b] in edits.array_windows::<2>() {
         debug_assert!(
             a.range.end <= b.range.start,
-            "overlapping edits: {:?} and {:?}",
+            "overlapping edits: {:?} and {:?}:\nleft: [{}] to [{}]\nright: [{}] to [{}]",
             a.range,
-            b.range
+            b.range,
+            &source[a.range.clone()],
+            a.new_text,
+            &source[b.range.clone()],
+            b.new_text,
         );
     }
 

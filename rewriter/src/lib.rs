@@ -23,6 +23,9 @@ pub fn format(input: &str, config: Config) -> String {
     // Spacing visitor collapses multi-line lists into one line, so alignment visitor can have a canonical form based on line length
     output = visit::run_pass(&output, &mut tree, &mut parser, visit::AlignmentVisitor::new(&config));
 
+    // Handle dtypes and other aligned tables specially
+    output = visit::run_pass(&output, &mut tree, &mut parser, visit::ColumnVisitor::default());
+
     // Remove trailing whitespace (including blank lines)
     output = remove_trailing_whitespace(&output);
 
