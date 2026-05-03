@@ -46,12 +46,13 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
         working-directory: rewriter
 
+      - name: Rename binary
+        shell: bash
+        run: cp rewriter/target/${{ matrix.target }}/release/${{ matrix.binary }} ${{ matrix.asset }}
+
       - name: Upload binary
         shell: bash
-        run: |
-          gh release upload ${{ github.ref_name }} \
-            rewriter/target/${{ matrix.target }}/release/${{ matrix.binary }} \
-            --clobber
+        run: gh release upload ${{ github.ref_name }} ${{ matrix.asset }} --clobber
         env:
           GH_TOKEN: ${{ github.token }}
 
