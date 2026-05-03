@@ -48,3 +48,8 @@ fn test_alignment() {
 fn test_comments_alignment() {
     run_test("comments");
 }
+
+#[test]
+fn test_columns() {
+    run_test("columns");
+}
