@@ -84,7 +84,7 @@ impl Visitor for AlignmentVisitor {
             return Visit::Skip;
         };
 
-        // Compute indentation for children of this list. ...
+        // Compute indentation for children of this list
         let first_child_col = first_child.start_position().column;
         let indent_width = match self.stack.iter().rev().find_map(|n| n.list_state.as_ref()) {
             Some(ls) => ls.indent_width + (first_child_col - ls.owning_orig_col),
@@ -103,8 +103,10 @@ impl Visitor for AlignmentVisitor {
 
         let mut cursor = node.walk();
         for child in node.named_children(&mut cursor).skip(1) {
+            // we still need the skip(1), because the first named child still has a prev (the parentheses/brackets)
+            let Some(prev) = child.prev_sibling() else { continue };
             self.edits.push(Edit {
-                range: child.start_byte()..child.start_byte(),
+                range: prev.end_byte()..child.start_byte(),
                 new_text: indent.clone(),
             });
         }
