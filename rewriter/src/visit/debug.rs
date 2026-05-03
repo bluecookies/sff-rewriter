@@ -28,10 +28,13 @@ impl Visitor for DebugVisitor {
                 format!("\x1b[2;37m<{}>\x1b[0m", node.kind()) // dim white for unnamed inner nodes
             }
         };
-        let source_spanned = node
-            .utf8_text(source)
-            .unwrap_or("\x1b[3m<invalid utf-8 or out of range>\x1b[0m");
-        log::debug!("{}{}: {}", indent, kind_fmt, source_spanned,);
+        if log::log_enabled!(log::Level::Debug) {
+            let source_spanned = node
+                .utf8_text(source)
+                .unwrap_or("\x1b[3m<invalid utf-8 or out of range>\x1b[0m");
+            let source_spanned = source_spanned.replace('\r', "␍").replace('\n', "␊");
+            log::debug!("{}{}: {}", indent, kind_fmt, source_spanned);
+        }
         Visit::Continue
     }
 
