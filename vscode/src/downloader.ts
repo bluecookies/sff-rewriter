@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import { Readable } from "stream";
 
 const GITHUB_REPO = "bluecookies/sff-rewriter";
 
@@ -83,21 +84,29 @@ const download = async (
 
   const file = fs.createWriteStream(dest);
 
-  await new Promise<void>((resolve, reject) => {
-    if (!res.body) {
-      return reject(new Error("No response body"));
-    }
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const nodeStream = Readable.fromWeb(res.body as any);
 
-    // Convert WebStream → Node stream
-    const stream = require("stream");
-    const nodeStream = stream.Readable.fromWeb(res.body);
+      nodeStream.pipe(file);
 
-    nodeStream.pipe(file);
+      nodeStream.on("error", reject);
+      file.on("error", reject);
+      file.on("finish", resolve);
+    });
 
-    nodeStream.on("error", reject);
-    file.on("error", reject);
-    file.on("finish", () => resolve());
-  });
+    output.appendLine(`Saved to ${dest}`);
+  } catch (err: any) {
+    output.appendLine(`Stream/write error: ${err.message}`);
+
+    // Clean up partial file
+    try {
+      fs.unlinkSync(dest);
+      output.appendLine(`Deleted partial file`);
+    } catch {}
+
+    throw err;
+  }
 
   output.appendLine(`Saved to ${dest}`);
 };
