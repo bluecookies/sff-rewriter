@@ -43,3 +43,8 @@ fn test_spacing() {
 fn test_alignment() {
     run_test("alignment");
 }
+
+#[test]
+fn test_comments_alignment() {
+    run_test("comments");
+}

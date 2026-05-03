@@ -111,6 +111,19 @@ impl Visitor for AlignmentVisitor {
             });
         }
 
+        // Special casing for when the last element is a comment, and so the closing bracket is on a new line
+        let closing = node.child(node.child_count() as u32 - 1).unwrap();
+        if let Some(prev) = closing.prev_sibling() {
+            if prev.is_extra() {
+                // closing bracket needs to be on its own line, indented to container base
+                let base_indent = indent_width - (first_child.start_position().column - node.start_position().column);
+                self.edits.push(Edit {
+                    range: prev.end_byte()..closing.start_byte(),
+                    new_text: format!("\n{}", " ".repeat(base_indent)).into(),
+                });
+            }
+        }
+
         self.stack.push(NodeInfo {
             node_id: node.id(),
             list_state: Some(ListState {
