@@ -1,6 +1,8 @@
 use super::{Edit, Visit, Visitor};
 use crate::kinds;
 
+const DEFAULT_LINE_LENGTH: usize = 88;
+
 pub struct AlignmentVisitor {
     line_length_threshold: usize,
     edits: Vec<Edit>,
@@ -10,7 +12,17 @@ pub struct AlignmentVisitor {
 impl Default for AlignmentVisitor {
     fn default() -> Self {
         Self {
-            line_length_threshold: 88,
+            line_length_threshold: DEFAULT_LINE_LENGTH,
+            edits: Vec::new(),
+            stack: Vec::new(),
+        }
+    }
+}
+
+impl AlignmentVisitor {
+    pub fn new(config: &crate::Config) -> Self {
+        Self {
+            line_length_threshold: config.line_length.unwrap_or(DEFAULT_LINE_LENGTH),
             edits: Vec::new(),
             stack: Vec::new(),
         }
