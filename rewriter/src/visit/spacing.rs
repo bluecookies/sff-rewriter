@@ -30,6 +30,10 @@ impl Visitor for SpacingVisitor {
                 if matches!(next.kind(), ")" | "]" | "}") {
                     return Visit::Continue;
                 };
+                // Skip comments
+                if next.is_extra() {
+                    return Visit::Continue;
+                }
                 self.edits.push(Edit {
                     range: node.end_byte()..next.start_byte(),
                     new_text: " ".into(),
@@ -42,6 +46,10 @@ impl Visitor for SpacingVisitor {
                 if matches!(prev.kind(), "(" | "[" | "{" | "," | ":") {
                     return Visit::Continue;
                 };
+                // Skip comments
+                if prev.is_extra() {
+                    return Visit::Continue;
+                }
                 self.edits.push(Edit {
                     range: prev.end_byte()..node.start_byte(),
                     new_text: " ".into(),
@@ -59,6 +67,10 @@ impl Visitor for SpacingVisitor {
                 }
 
                 let Some(next) = node.next_sibling() else { return Visit::Continue };
+                // Skip comments
+                if next.is_extra() {
+                    return Visit::Continue;
+                }
                 self.edits.push(Edit {
                     range: node.end_byte()..next.start_byte(),
                     new_text: " ".into(),
