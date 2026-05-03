@@ -116,7 +116,11 @@ impl Visitor for AlignmentVisitor {
         if let Some(prev) = closing.prev_sibling() {
             if prev.is_extra() {
                 // closing bracket needs to be on its own line, indented to container base
-                let base_indent = indent_width - (first_child.start_position().column - node.start_position().column);
+                let distance = first_child
+                    .start_position()
+                    .column
+                    .saturating_sub(node.start_position().column);
+                let base_indent = indent_width.saturating_sub(distance);
                 self.edits.push(Edit {
                     range: prev.end_byte()..closing.start_byte(),
                     new_text: format!("\n{}", " ".repeat(base_indent)).into(),
