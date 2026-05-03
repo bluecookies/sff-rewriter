@@ -21,7 +21,8 @@ my_function(1, "2","value",1234567,
 my_function(1, "2","value",1234567,   (1, 2))
 my_function(1, "2","value",1234567,11111111111111111111111111111111111111111,(1, 2))
 my_function(1, "2","value",1234567,       my_function("nested function call","on one line"))
-my_function(1, "2","value",1234567,my_fn("nested function call, but this one","should break on two lines correctly"))
+my_function(1, "2","value",1234567,my_fn(
+    "nested function call, but this one","should break on two lines correctly"))
 
 
 short_nested_dict = { "key": {"nested_key": "nested_value"} }
