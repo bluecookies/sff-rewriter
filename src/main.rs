@@ -2,9 +2,6 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-mod kinds;
-mod visit;
-
 const LINE_LENGTH_ENV: &str = "SFF_LINE_LENGTH";
 
 #[derive(Parser)]
@@ -34,10 +31,6 @@ impl Args {
     }
 }
 
-struct Config {
-    line_length: Option<usize>,
-}
-
 fn main() -> anyhow::Result<()> {
     env_logger::init();
 
@@ -57,11 +50,11 @@ fn main() -> anyhow::Result<()> {
         todo!("not handled yet")
     }
 
-    let config = Config {
+    let config = sff_formatter::Config {
         line_length: args.line_length(),
     };
 
-    let output = format(&source, config);
+    let output = sff_formatter::format(&source, config);
 
     match (&args.path, args.in_place) {
         (Some(path), true) => std::fs::write(path, output)?,
@@ -69,39 +62,4 @@ fn main() -> anyhow::Result<()> {
     }
 
     Ok(())
-}
-
-fn format(input: &str, config: Config) -> String {
-    let mut parser = tree_sitter::Parser::new();
-    parser
-        .set_language(&tree_sitter_python::LANGUAGE.into())
-        .expect("incompatible language version");
-
-    let mut tree = parser.parse(input, None).expect("parser language not set");
-
-    let mut output;
-
-    output = visit::run_pass(input, &mut tree, &mut parser, visit::DebugVisitor::default());
-    output = visit::run_pass(&output, &mut tree, &mut parser, visit::QuotesVisitor::default());
-    // Format parens, brackets, braces and commas before parameter alignment, since the latter depends on the former
-    output = visit::run_pass(&output, &mut tree, &mut parser, visit::SpacingVisitor::default());
-    // Spacing visitor collapses multi-line lists into one line, so alignment visitor can have a canonical form based on line length
-    output = visit::run_pass(&output, &mut tree, &mut parser, visit::AlignmentVisitor::new(&config));
-
-    // Remove trailing whitespace (including blank lines)
-    output = remove_trailing_whitespace(&output);
-
-    output
-}
-
-fn remove_trailing_whitespace(source: &str) -> String {
-    let mut output = source
-        .lines()
-        .map(|line| line.trim_end())
-        .collect::<Vec<_>>()
-        .join("\n");
-    if source.ends_with('\n') {
-        output.push('\n');
-    }
-    output
 }
