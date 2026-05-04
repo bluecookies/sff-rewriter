@@ -131,14 +131,17 @@ impl ColumnVisitor {
     }
 
     fn format_row(&mut self, row: &Row, columns: &[Column], source: &[u8], is_last: bool) {
-        for (element, col) in row.elements.iter().zip(columns.iter()) {
+        for (i, (element, col)) in row.elements.iter().zip(columns.iter()).enumerate() {
             let text = element.utf8_text(source).unwrap_or("");
+            let end = if i == columns.len() - 1 { " " } else { "" };
             let padded: smol_str::SmolStr = match col.alignment {
-                ColumnAlignment::Left => format!("{:<width$}", text, width = col.width).into(),
-                ColumnAlignment::Right => format!("{:>width$}", text, width = col.width).into(),
+                ColumnAlignment::Left => format!(" {:<width$}{end}", text, width = col.width).into(),
+                ColumnAlignment::Right => format!(" {:>width$}{end}", text, width = col.width).into(),
             };
+            let prev = element.prev_sibling().expect("no prev sibling");
+            let next = element.next_sibling().expect("no next sibling");
             self.edits.push(Edit {
-                range: element.start_byte()..element.end_byte(),
+                range: prev.end_byte()..next.start_byte(),
                 new_text: padded,
             });
         }

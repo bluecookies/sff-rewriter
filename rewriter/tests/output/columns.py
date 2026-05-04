@@ -13,6 +13,11 @@ dtype = [ ( 'foo'      , 'U8' ),          # describe foo7
           ( 'foobarbaz', 'U8' ),          # describe foobarbaz
           ( 'foofo'    , 'U8' ) ]         # describe foofo
 
+already_spaced = [ ( 'some spacing', 0 ),
+                   ( 'second'      , 1 ),
+                   ( 'third'       , 2 ),
+                   ( 'fourth'      , 3 ), ]
+
 weird = [ ( 'foo', 'bar' ),
           ( 'baz',
             # some comment
