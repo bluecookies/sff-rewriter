@@ -44,11 +44,10 @@ fn walk<T: Visitor>(root: tree_sitter::Node, visitor: &mut T, source: &[u8]) {
         let flow = visitor.visit(cursor.node(), source);
 
         // Skip the children if needed
-        if matches!(flow, Visit::Continue) {
-            if cursor.goto_first_child() {
+        if matches!(flow, Visit::Continue)
+            && cursor.goto_first_child() {
                 continue;
             }
-        }
 
         if cursor.goto_next_sibling() {
             continue;

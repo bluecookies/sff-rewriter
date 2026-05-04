@@ -174,7 +174,7 @@ impl Visitor for ColumnVisitor {
         let columns = self.compute_columns(&rows, source);
 
         for (i, row) in rows.iter().enumerate() {
-            self.format_row(&row, &columns, source, rows.len() - 1 == i);
+            self.format_row(row, &columns, source, rows.len() - 1 == i);
         }
 
         // Handle comment on last row correctly

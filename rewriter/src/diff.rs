@@ -34,11 +34,10 @@ pub fn parse_hunks(diff: &str) -> Vec<(Hunk, Vec<String>)> {
                 hunks.push(h);
             }
             current = Some((hunk, Vec::new()));
-        } else if let Some((_, ref mut lines)) = current {
-            if let Some(new_line) = line.strip_prefix('+') {
+        } else if let Some((_, ref mut lines)) = current
+            && let Some(new_line) = line.strip_prefix('+') {
                 lines.push(new_line.to_string());
             }
-        }
     }
 
     if let Some(h) = current.take() {
