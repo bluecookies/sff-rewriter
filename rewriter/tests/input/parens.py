@@ -33,6 +33,12 @@ def another_fn(_:int):  # space here
     if foo:     # no space here
         pass
 
+# Check commas
+foo = (1    ,)
+foo = (   2, )
+foo = ( 3,4,5 )
+indexing = bar[1:,], bar[2:  ,]
+
 some_var = 123
 print(f"This brace should not be touched: {some_var = }")
 print(f"But the bracket should: {bar[0] = }")

@@ -55,7 +55,7 @@ impl Visitor for SpacingVisitor {
                     new_text: " ".into(),
                 });
             }
-            // Add space after commas, and colons in dicts and fn defs
+            // Add space after commas, and colons in dicts and fn defs and remove spaces before comma
             k @ ("," | ":") => {
                 if k == ":" {
                     let Some(parent_kind) = node.parent().map(|n| n.kind()) else {
@@ -63,6 +63,20 @@ impl Visitor for SpacingVisitor {
                     };
                     if !(parent_kind == kinds::PAIR || parent_kind == kinds::TYPED_PARAMETER) {
                         return Visit::Continue;
+                    }
+                } else if k == "," {
+                    // remove spaces
+                    if let Some(prev) = node.prev_sibling()
+                        && !prev.is_extra()
+                    {
+                        // don't modify if something might have emitted an edit already, even if these probably arent valid syntax
+                        // a colon cannot modify here, since it would not be a pair or typed parameter
+                        if !matches!(prev.kind(), "(" | "[" | "{" | ",") {
+                            self.edits.push(Edit {
+                                range: prev.end_byte()..node.start_byte(),
+                                new_text: "".into(),
+                            });
+                        }
                     }
                 }
 
